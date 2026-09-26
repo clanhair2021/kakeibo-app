@@ -97,17 +97,29 @@ function searchBottomPrice() {
   }
   openModal('bottomPriceModal');
 }
+// カレンダーの表示月を管理する変数（デフォルトは現在日時）
+let currentCalendarDate = new Date();
+
+// 月を前後移動する関数
+function changeCalendarMonth(diff) {
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
+  renderCalendar();
+}
 
 function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   grid.innerHTML = '';
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  
+  const year = currentCalendarDate.getFullYear();
+  const month = currentCalendarDate.getMonth(); // 0-11
+
+  // ★表示されている年月を更新（例: 2026年9月）
+  document.getElementById('calendarMonthTitle').innerText = `${year}年${month + 1}月`;
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+  
   daysOfWeek.forEach(d => grid.innerHTML += `<div class="calendar-day-header">${d}</div>`);
 
   for (let i = 0; i < firstDay; i++) {
