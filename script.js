@@ -681,3 +681,15 @@ function exportToCSV() {
 
 function saveData() { localStorage.setItem('receipt_items', JSON.stringify(items)); }
 function escapeHtml(str) { return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
+
+// ▼ Firebase接続テスト用コード（一時追加）
+window.addEventListener('DOMContentLoaded', () => {
+  db.ref('test_connection').set({
+    time: new Date().toISOString(),
+    status: 'OK'
+  }).then(() => {
+    alert('Firebaseへの書き込みテスト成功！接続できています。');
+  }).catch((error) => {
+    alert('Firebase接続エラー: ' + error.message);
+  });
+});
