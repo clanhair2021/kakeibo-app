@@ -105,6 +105,11 @@
           </span>
           <span style="font-size:0.7rem; font-weight:normal; color:var(--text-muted);">日付タップで商品表示</span>
         </h2>
+        <div class="calendar-header-ctrl">
+          <button class="btn-outline" onclick="changeCalendarMonth(-1)">◀ 前月</button>
+          <span id="calendarMonthTitle" class="calendar-month-title">2026年9月</span>
+          <button class="btn-outline" onclick="changeCalendarMonth(1)">次月 ▶</button>
+        </div>
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
     </div>
