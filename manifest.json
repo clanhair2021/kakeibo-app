@@ -1,5 +1,5 @@
 {
-  "name": "レシートデータ管理",
+  "name": "超多機能レシートデータ管理システム",
   "short_name": "レシート管理",
   "start_url": "./index.html",
   "display": "standalone",
