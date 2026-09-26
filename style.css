@@ -1,0 +1,289 @@
+/* ===================================================
+   1. カラー＆エフェクトテーマ定義（5スタイル）
+   =================================================== */
+
+/* --- [テーマ1] デフォルト / 白黒・レトロゲーム (mono) --- */
+:root, [data-theme="mono"] {
+  --bg: #000000;
+  --card-bg: #111111;
+  --text: #cccccc;
+  --text-bright: #ffffff;
+  --text-muted: #888888;
+  --border: #ffffff;
+  --primary: #ffffff;
+  --primary-hover: #dddddd;
+  --success: #cccccc;
+  --warning: #888888;
+  --danger: #ffffff;
+  --header-bg: #111111;
+  --card-shadow: 3px 3px 0 #ffffff;
+  --btn-shadow: 3px 3px 0 #ffffff;
+  --btn-active-transform: translate(3px, 3px);
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  --crt-display: none;
+}
+
+/* --- [テーマ2] サイバーネオン (neon) --- */
+[data-theme="neon"] {
+  --bg: #0a0e0a;
+  --card-bg: #0f1410;
+  --text: #b0b0b0;
+  --text-bright: #e0e0e0;
+  --text-muted: #5a5a5a;
+  --border: #ff00ff;
+  --primary: #00ff88;
+  --primary-hover: #00ccff;
+  --success: #00ff88;
+  --warning: #ffaa00;
+  --danger: #ff2244;
+  --header-bg: #0f1410;
+  --card-shadow: 0 0 15px rgba(255, 0, 255, 0.4), 4px 4px 0 #ff00ff;
+  --btn-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 3px 3px 0 #00ff88;
+  --btn-active-transform: translate(3px, 3px);
+  --font-family: "Courier New", monospace;
+  --crt-display: none;
+}
+
+/* --- [テーマ3] レトロTV / CRT (retro-tv) --- */
+[data-theme="retro-tv"] {
+  --bg: #1a0f0a;
+  --card-bg: #2a1f18;
+  --text: #d4a470;
+  --text-bright: #f4d4a0;
+  --text-muted: #8a6a50;
+  --border: #4a3a2a;
+  --primary: #ffaa00;
+  --primary-hover: #ff6b4a;
+  --success: #00d4aa;
+  --warning: #ffaa00;
+  --danger: #ff6b4a;
+  --header-bg: #2a1f18;
+  --card-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 5px 10px rgba(0,0,0,0.6);
+  --btn-shadow: 0 4px 0 #0f0a05;
+  --btn-active-transform: translateY(3px);
+  --font-family: "Courier New", monospace;
+  --crt-display: block;
+  --crt-scan-opacity: 0.15;
+  --crt-vignette-opacity: 0.6;
+}
+
+/* --- [テーマ4] モノクロCRT (mono-crt) --- */
+[data-theme="mono-crt"] {
+  --bg: #050505;
+  --card-bg: #161616;
+  --text: #eceaea;
+  --text-bright: #ffffff;
+  --text-muted: #7d7d7d;
+  --border: #eceaea;
+  --primary: #ffffff;
+  --primary-hover: #bdbdbd;
+  --success: #eceaea;
+  --warning: #7d7d7d;
+  --danger: #ffffff;
+  --header-bg: #161616;
+  --card-shadow: 0 0 0 2px #000000, 0 8px 16px rgba(0,0,0,0.8);
+  --btn-shadow: 2px 2px 0 #000000;
+  --btn-active-transform: translate(2px, 2px);
+  --font-family: "DotGothic16", "MS Gothic", monospace;
+  --crt-display: block;
+  --crt-scan-opacity: 0.25;
+  --crt-vignette-opacity: 0.85;
+}
+
+/* --- [テーマ5] レトロUI・ライト/ダーク (retro-ui) --- */
+[data-theme="retro-ui"] {
+  --bg: #fcfcfc;
+  --card-bg: rgba(255, 255, 255, 0.92);
+  --text: #222222;
+  --text-bright: #000000;
+  --text-muted: #666666;
+  --border: #333333;
+  --primary: #111111;
+  --primary-hover: #333333;
+  --success: #333333;
+  --warning: #666666;
+  --danger: #000000;
+  --header-bg: #ffffff;
+  --card-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  --btn-shadow: 0 4px 0 #555555;
+  --btn-active-transform: translateY(4px);
+  --font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  --crt-display: none;
+}
+
+/* ===================================================
+   2. 基本構造 ＆ スタイリング
+   =================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.2s, color 0.2s;
+  position: relative;
+}
+
+/* --- CRT（ブラウン管）走査線 ＆ ビネットオーバーレイ --- */
+#crt-overlay {
+  display: var(--crt-display);
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.crt-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,var(--crt-vignette-opacity, 0.7)) 100%);
+}
+
+.crt-scanlines {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, var(--crt-scan-opacity, 0.15)),
+    rgba(0, 0, 0, var(--crt-scan-opacity, 0.15)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* --- SVGアイコンスタイル --- */
+.icon {
+  width: 1.1em; height: 1.1em;
+  vertical-align: -0.15em;
+  stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  fill: none; display: inline-block; flex-shrink: 0;
+}
+.icon-primary { stroke: var(--primary); }
+
+/* ヘッダー ＆ タブ */
+header {
+  background: var(--header-bg);
+  border-bottom: 2px solid var(--border);
+  padding: 12px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 100;
+}
+header h1 { font-size: 1.1rem; color: var(--text-bright); display: flex; align-items: center; gap: 6px; }
+
+.icon-btn {
+  background: none; border: 1px solid var(--border);
+  cursor: pointer; color: var(--text-bright); padding: 6px;
+  display: flex; align-items: center; border-radius: 4px;
+  box-shadow: var(--btn-shadow);
+}
+.icon-btn:active { transform: var(--btn-active-transform); }
+
+.tab-nav { display: flex; background: var(--card-bg); border-bottom: 2px solid var(--border); }
+.tab-btn {
+  flex: 1; padding: 12px 8px; border: none; background: none;
+  font-weight: bold; font-size: 0.85rem; color: var(--text-muted);
+  cursor: pointer; border-bottom: 3px solid transparent;
+  transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* メイン ＆ カード */
+main { flex: 1; padding: 12px; max-width: 1200px; margin: 0 auto; width: 100%; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card {
+  background: var(--card-bg);
+  padding: 14px; border-radius: 8px;
+  margin-bottom: 14px;
+  border: 2px solid var(--border);
+  box-shadow: var(--card-shadow);
+}
+.card h2 { font-size: 0.95rem; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; color: var(--text-bright); }
+.title-with-icon { display: flex; align-items: center; gap: 6px; }
+
+/* フォーム ＆ ボタン */
+input, select, textarea {
+  background: var(--bg);
+  color: var(--text-bright);
+  border: 1px solid var(--border);
+  padding: 8px; border-radius: 4px; font-size: 0.85rem; width: 100%;
+  font-family: var(--font-family);
+}
+textarea { height: 80px; margin-bottom: 8px; }
+
+.btn {
+  background-color: var(--card-bg);
+  color: var(--text-bright);
+  border: 2px solid var(--border);
+  padding: 8px 14px; border-radius: 4px; font-weight: bold;
+  cursor: pointer; font-size: 0.85rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  box-shadow: var(--btn-shadow);
+  transition: transform 0.05s, box-shadow 0.05s;
+  font-family: var(--font-family);
+}
+.btn:active { transform: var(--btn-active-transform); box-shadow: none; }
+.btn-success { border-color: var(--success); color: var(--success); }
+.btn-outline {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--border); padding: 4px 8px; font-size: 0.75rem; border-radius: 4px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  box-shadow: var(--btn-shadow);
+}
+
+/* 予算ゲージ */
+.clickable-card { cursor: pointer; }
+.budget-stats { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: bold; margin-bottom: 6px; color: var(--text-bright); }
+.progress-bar-bg { background-color: var(--bg); height: 10px; border-radius: 5px; border: 1px solid var(--border); overflow: hidden; }
+.progress-bar-fill { background-color: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
+
+/* カレンダー */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+.calendar-day-header { font-weight: bold; font-size: 0.7rem; color: var(--text-muted); padding: 2px; }
+.calendar-cell {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; min-height: 42px; padding: 2px; font-size: 0.65rem;
+  display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;
+}
+.calendar-cell:hover { border-color: var(--primary); }
+.calendar-cell .day-num { font-weight: bold; color: var(--text-bright); }
+.calendar-cell .day-amount { color: var(--primary); font-weight: bold; font-size: 0.6rem; }
+
+/* 分析 ＆ テーブル */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.chart-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.chart-header-top { display: flex; justify-content: space-between; align-items: center; }
+.chart-controls { display: flex; gap: 6px; align-items: center; }
+.chart-container { position: relative; height: 160px; width: 100%; display: flex; justify-content: center; }
+.chart-scroll-wrapper { overflow-x: auto; width: 100%; }
+.chart-scroll-inner { min-width: 500px; height: 160px; }
+
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 8px; }
+.filter-group { display: flex; flex-direction: column; gap: 2px; }
+.filter-group label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+
+.table-container { overflow-x: auto; max-height: 250px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text-bright); }
+th { background-color: var(--bg); color: var(--text-muted); font-weight: 600; position: sticky; top: 0; }
+.badge { border: 1px solid var(--primary); color: var(--primary); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; }
+.price { text-align: right; font-weight: bold; }
+
+.summary-bar { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: bold; color: var(--primary); border: 1px solid var(--border); padding: 8px 12px; border-radius: 4px; }
+
+.category-manager { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.cat-tag { background-color: var(--bg); border: 1px solid var(--border); padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; color: var(--text-bright); }
+.cat-tag button { background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold; }
+
+.cat-budget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.cat-budget-item { background: var(--bg); padding: 8px; border-radius: 4px; border: 1px solid var(--border); font-size: 0.75rem; color: var(--text-bright); }
+
+/* モーダル */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; padding: 16px; }
+.modal { background: var(--card-bg); color: var(--text-bright); padding: 16px; border-radius: 8px; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; border: 2px solid var(--border); box-shadow: var(--card-shadow); }
+.modal h3 { font-size: 1rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.action-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; margin-left: 4px; display: inline-flex; align-items: center; color: var(--text-bright); }
