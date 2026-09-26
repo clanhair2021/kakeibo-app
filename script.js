@@ -16,10 +16,6 @@ function getCssVar(varName) {
 
 // テーマごとのグラフパレットを生成する関数
 function getThemeChartColors() {
-  const primary = getCssVar('--primary') || '#ffffff';
-  const border = getCssVar('--border') || '#ffffff';
-  const textMuted = getCssVar('--text-muted') || '#888888';
-
   if (currentTheme === 'neon') {
     return {
       bar: '#00ff88',
@@ -63,7 +59,9 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (window.event && window.event.currentTarget) {
+    window.event.currentTarget.classList.add('active');
+  }
 }
 
 function openModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -554,4 +552,15 @@ function resetFilters() {
 }
 
 function exportToCSV() {
-  
+  if (items.length === 0) return alert('データがありません。');
+  let csvContent = "\uFEFF日付,店舗名,商品名,金額,カテゴリ\n";
+  items.forEach(item => { csvContent += `"${item.date}","${item.store}","${item.name}",${item.price},"${item.category}"\n`; });
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `kakeibo_data_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+}
+
+function saveData() { localStorage.setItem('receipt_items', JSON.stringify(items)); }
+function escapeHtml(str) { return str.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
