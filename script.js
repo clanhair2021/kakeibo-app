@@ -1,3 +1,13 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyASWXfL7e8cnrnMre9cLqffgPf06Ccb_wc",
+  authDomain: "kakeibo-app-c8e8c.firebaseapp.com",
+  databaseURL: "https://kakeibo-app-c8e8c-default-rtdb.firebaseio.com",
+  projectId: "kakeibo-app-c8e8c",
+  storageBucket: "kakeibo-app-c8e8c.firebasestorage.app",
+  messagingSenderId: "319296627332",
+  appId: "1:319296627332:web:4cb8038a9b58902b8458d1"
+};
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
