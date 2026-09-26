@@ -1,3 +1,29 @@
+// ==========================================
+// 1. 変数の初期化（一番上に配置）
+// ==========================================
+const defaultCategories = ["食費", "日用品", "衣類", "趣味・娯楽", "固定費", "その他"];
+let categories = JSON.parse(localStorage.getItem('receipt_categories')) || defaultCategories;
+let categoryBudgets = JSON.parse(localStorage.getItem('receipt_cat_budgets')) || {};
+let items = JSON.parse(localStorage.getItem('receipt_items')) || [];
+let monthlyBudget = parseInt(localStorage.getItem('receipt_budget')) || 100000;
+let currentTheme = localStorage.getItem('receipt_theme') || 'mono';
+
+let activeDayDateStr = '';
+let catChart = null;
+let trendChart = null;
+
+// Service Workerの登録
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('SW Registered!', reg))
+      .catch((err) => console.log('SW Error:', err));
+  });
+}
+
+// ==========================================
+// 2. Firebase の初期化設定
+// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyASWXfL7e8cnrnMre9cLqffgPf06Ccb_wc",
   authDomain: "kakeibo-app-c8e8c.firebaseapp.com",
@@ -19,17 +45,22 @@ const itemsRef = db.ref('kakeibo_items');
 const budgetRef = db.ref('kakeibo_budget');
 const categoriesRef = db.ref('kakeibo_categories');
 
-// アプリ起動時にリアルタイム同期を開始
+// ==========================================
+// 3. アプリ起動処理（リアルタイム同期開始）
+// ==========================================
 window.onload = () => {
-  changeTheme(currentTheme);
-  document.getElementById('themeSelect').value = currentTheme;
+  if (typeof changeTheme === 'function') {
+    changeTheme(currentTheme);
+  }
+  const themeSelect = document.getElementById('themeSelect');
+  if (themeSelect) themeSelect.value = currentTheme;
   
   // 1. カテゴリデータのリアルタイム取得
   categoriesRef.on('value', (snapshot) => {
     const val = snapshot.val();
     if (val) {
       categories = val;
-      renderCategoryManager();
+      if (typeof renderCategoryManager === 'function') renderCategoryManager();
     }
   });
 
@@ -38,7 +69,8 @@ window.onload = () => {
     const val = snapshot.val();
     if (val !== null && val !== undefined) {
       monthlyBudget = val;
-      document.getElementById('monthlyBudgetInput').value = monthlyBudget;
+      const budgetInput = document.getElementById('monthlyBudgetInput');
+      if (budgetInput) budgetInput.value = monthlyBudget;
       updateBudgetDisplay();
     }
   });
@@ -47,18 +79,22 @@ window.onload = () => {
   itemsRef.on('value', (snapshot) => {
     const data = snapshot.val();
     items = data ? Object.values(data) : [];
-    applyFilters();
+    if (typeof applyFilters === 'function') applyFilters();
   });
 
   const now = new Date();
   const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  document.getElementById('catChartMonthPicker').value = thisMonthStr;
-  document.getElementById('catChartYearPicker').value = now.getFullYear();
+  const monthPicker = document.getElementById('catChartMonthPicker');
+  const yearPicker = document.getElementById('catChartYearPicker');
+  if (monthPicker) monthPicker.value = thisMonthStr;
+  if (yearPicker) yearPicker.value = now.getFullYear();
 
-  onTrendScaleChange();
+  if (typeof onTrendScaleChange === 'function') onTrendScaleChange();
 };
 
-// データの保存処理（Firebaseへ更新）
+// ==========================================
+// 4. データ保存関数
+// ==========================================
 function saveData() {
   itemsRef.set(items);
 }
@@ -66,11 +102,12 @@ function saveData() {
 function saveCatBudget(cat, val) {
   categoryBudgets[cat] = parseInt(val) || 0;
   db.ref('kakeibo_cat_budgets').set(categoryBudgets);
-  renderCategoryBudgets();
+  if (typeof renderCategoryBudgets === 'function') renderCategoryBudgets();
 }
 
 function updateBudgetDisplay() {
-  monthlyBudget = parseInt(document.getElementById('monthlyBudgetInput').value) || 0;
+  const budgetInput = document.getElementById('monthlyBudgetInput');
+  monthlyBudget = budgetInput ? (parseInt(budgetInput.value) || 0) : monthlyBudget;
   budgetRef.set(monthlyBudget);
 
   const now = new Date();
@@ -87,39 +124,24 @@ function updateBudgetDisplay() {
   const remaining = monthlyBudget - thisMonthSpent;
   const percent = monthlyBudget > 0 ? Math.min(Math.round((thisMonthSpent / monthlyBudget) * 100), 100) : 0;
 
-  document.getElementById('thisMonthSpent').innerText = thisMonthSpent.toLocaleString();
-  document.getElementById('monthCompare').innerText = diffStr;
-  document.getElementById('budgetRemaining').innerText = remaining.toLocaleString();
+  const elSpent = document.getElementById('thisMonthSpent');
+  const elCompare = document.getElementById('monthCompare');
+  const elRemaining = document.getElementById('budgetRemaining');
+  const elFill = document.getElementById('progressBarFill');
 
-  const fill = document.getElementById('progressBarFill');
-  fill.style.width = `${percent}%`;
+  if (elSpent) elSpent.innerText = thisMonthSpent.toLocaleString();
+  if (elCompare) elCompare.innerText = diffStr;
+  if (elRemaining) elRemaining.innerText = remaining.toLocaleString();
+  if (elFill) elFill.style.width = `${percent}%`;
 }
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then((reg) => console.log('SW Registered!', reg))
-      .catch((err) => console.log('SW Error:', err));
-  });
-}
-
-const defaultCategories = ["食費", "日用品", "衣類", "趣味・娯楽", "固定費", "その他"];
-let categories = JSON.parse(localStorage.getItem('receipt_categories')) || defaultCategories;
-let categoryBudgets = JSON.parse(localStorage.getItem('receipt_cat_budgets')) || {};
-let items = JSON.parse(localStorage.getItem('receipt_items')) || [];
-let monthlyBudget = parseInt(localStorage.getItem('receipt_budget')) || 100000;
-let currentTheme = localStorage.getItem('receipt_theme') || 'mono';
-
-let activeDayDateStr = '';
-let catChart = null;
-let trendChart = null;
-
-// 現在のCSS変数（テーマカラー）を取得するヘルパー関数
+// ==========================================
+// 5. デザイン・ヘルパー関数
+// ==========================================
 function getCssVar(varName) {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
 }
 
-// テーマごとのグラフパレットを生成する関数
 function getThemeChartColors() {
   if (currentTheme === 'neon') {
     return {
@@ -137,13 +159,13 @@ function getThemeChartColors() {
       pie: ['#111111', '#444444', '#777777', '#aaaaaa', '#cccccc', '#e0e0e0']
     };
   } else {
-    // mono ＆ mono-crt
     return {
       bar: '#ffffff',
       pie: ['#ffffff', '#cccccc', '#999999', '#666666', '#444444', '#222222']
     };
   }
 }
+
 
 window.onload = () => {
   changeTheme(currentTheme);
