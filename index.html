@@ -4,20 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>超多機能レシートデータ管理システム</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <link rel="stylesheet" href="style.css">
-    <!-- PWA設定 (アプリ化＆URLバー非表示) -->
+
+  <!-- PWA設定 (アプリ化＆URLバー非表示) -->
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
   <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='100' fill='%23111111'/><path d='M280 64L100 288h160l-20 160 180-224H260l20-160z' fill='%2300ff88'/></svg>">
-</head>
-<body>
 
+  <!-- 外部ライブラリ (Chart.js & Firebase) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+  
   <!-- CRT（ブラウン管）走査線・エフェクトレイヤー -->
   <div id="crt-overlay">
     <div class="crt-vignette"></div>
