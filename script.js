@@ -1,3 +1,10 @@
+// Service Workerの登録
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch((err) => {
+    console.log('ServiceWorker error:', err);
+  });
+}
+
 const defaultCategories = ["食費", "日用品", "衣類", "趣味・娯楽", "固定費", "その他"];
 let categories = JSON.parse(localStorage.getItem('receipt_categories')) || defaultCategories;
 let categoryBudgets = JSON.parse(localStorage.getItem('receipt_cat_budgets')) || {};
