@@ -8,6 +8,93 @@ const firebaseConfig = {
   appId: "1:319296627332:web:4cb8038a9b58902b8458d1"
 };
 
+// Firebase の初期化
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+// データ同期用の参照
+const itemsRef = db.ref('kakeibo_items');
+const budgetRef = db.ref('kakeibo_budget');
+const categoriesRef = db.ref('kakeibo_categories');
+
+// アプリ起動時にリアルタイム同期を開始
+window.onload = () => {
+  changeTheme(currentTheme);
+  document.getElementById('themeSelect').value = currentTheme;
+  
+  // 1. カテゴリデータのリアルタイム取得
+  categoriesRef.on('value', (snapshot) => {
+    const val = snapshot.val();
+    if (val) {
+      categories = val;
+      renderCategoryManager();
+    }
+  });
+
+  // 2. 予算データのリアルタイム取得
+  budgetRef.on('value', (snapshot) => {
+    const val = snapshot.val();
+    if (val !== null && val !== undefined) {
+      monthlyBudget = val;
+      document.getElementById('monthlyBudgetInput').value = monthlyBudget;
+      updateBudgetDisplay();
+    }
+  });
+
+  // 3. レシート明細データのリアルタイム取得
+  itemsRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    items = data ? Object.values(data) : [];
+    applyFilters();
+  });
+
+  const now = new Date();
+  const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  document.getElementById('catChartMonthPicker').value = thisMonthStr;
+  document.getElementById('catChartYearPicker').value = now.getFullYear();
+
+  onTrendScaleChange();
+};
+
+// データの保存処理（Firebaseへ更新）
+function saveData() {
+  itemsRef.set(items);
+}
+
+function saveCatBudget(cat, val) {
+  categoryBudgets[cat] = parseInt(val) || 0;
+  db.ref('kakeibo_cat_budgets').set(categoryBudgets);
+  renderCategoryBudgets();
+}
+
+function updateBudgetDisplay() {
+  monthlyBudget = parseInt(document.getElementById('monthlyBudgetInput').value) || 0;
+  budgetRef.set(monthlyBudget);
+
+  const now = new Date();
+  const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const thisMonthSpent = items.filter(i => i.date.startsWith(thisMonthStr)).reduce((s, i) => s + i.price, 0);
+  const lastMonthSpent = items.filter(i => i.date.startsWith(lastMonthStr)).reduce((s, i) => s + i.price, 0);
+
+  const diff = thisMonthSpent - lastMonthSpent;
+  const diffStr = diff >= 0 ? `前月比: +¥${diff.toLocaleString()}` : `前月比: -¥${Math.abs(diff).toLocaleString()}`;
+
+  const remaining = monthlyBudget - thisMonthSpent;
+  const percent = monthlyBudget > 0 ? Math.min(Math.round((thisMonthSpent / monthlyBudget) * 100), 100) : 0;
+
+  document.getElementById('thisMonthSpent').innerText = thisMonthSpent.toLocaleString();
+  document.getElementById('monthCompare').innerText = diffStr;
+  document.getElementById('budgetRemaining').innerText = remaining.toLocaleString();
+
+  const fill = document.getElementById('progressBarFill');
+  fill.style.width = `${percent}%`;
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
