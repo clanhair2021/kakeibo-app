@@ -249,6 +249,21 @@ textarea { height: 80px; margin-bottom: 8px; }
   border-radius: 4px; min-height: 42px; padding: 2px; font-size: 0.65rem;
   display: flex; flex-direction: column; justify-content: space-between; cursor: pointer;
 }
+/* カレンダーの月切替ヘッダー */
+.calendar-header-ctrl {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+
+.calendar-month-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: var(--text-bright);
+}
+
 .calendar-cell:hover { border-color: var(--primary); }
 .calendar-cell .day-num { font-weight: bold; color: var(--text-bright); }
 .calendar-cell .day-amount { color: var(--primary); font-weight: bold; font-size: 0.6rem; }
