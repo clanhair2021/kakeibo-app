@@ -750,104 +750,128 @@ function getThemeChartColors() {
     };
   }
 }
-        
-// --- モーダル（メモ・画像編集）関連処理 ---
-const detailModal = document.getElementById("detail-modal");
-const modalClose = document.getElementById("modal-close");
-const modalItemId = document.getElementById("modal-item-id");
-const modalNote = document.getElementById("modal-note");
-const modalImage = document.getElementById("modal-image");
-const imagePreviewContainer = document.getElementById("image-preview-container");
-const saveDetailBtn = document.getElementById("save-detail-btn");
-const removeImageBtn = document.getElementById("remove-image-btn");
+// ==========================================
+// 6. 編集モーダル・画像プレビュー処理
+// ==========================================
+let currentEditImageData = "";
 
-let currentImageData = "";
+// 「編集」ボタンを押した時に実行される関数
+function openEditModal(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
 
-window.openModal = function(id) {
-  modalItemId.value = id;
-  currentImageData = "";
+  document.getElementById('editItemId').value = item.id;
+  document.getElementById('editItemDate').value = item.date || '';
+  document.getElementById('editItemStore').value = item.store || '';
+  document.getElementById('editItemName').value = item.name || '';
+  document.getElementById('editItemPrice').value = item.price || 0;
+  document.getElementById('editItemNote').value = item.note || '';
+  
+  currentEditImageData = item.image || '';
 
-  expensesRef.child(id).once("value").then((snapshot) => {
-    const data = snapshot.val();
-    if (!data) return;
+  // カテゴリー選択肢の設定
+  const catSelect = document.getElementById('editItemCategory');
+  if (catSelect) {
+    catSelect.innerHTML = '';
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      if (cat === item.category) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+  }
 
-    modalNote.value = data.note || "";
-    currentImageData = data.image || "";
-    renderImagePreview();
+  renderEditImagePreview();
+  openModal('itemEditModal');
+}
 
-    detailModal.style.display = "flex";
-  });
-};
+// 画像が選択された際の圧縮・Base64変換
+const editImgInput = document.getElementById('editItemImage');
+if (editImgInput) {
+  editImgInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-modalClose.onclick = () => { detailModal.style.display = "none"; };
-window.onclick = (e) => { if (e.target === detailModal) detailModal.style.display = "none"; };
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 800;
+        let width = img.width;
+        let height = img.height;
 
-modalImage.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+        if (width > height && width > maxDim) {
+          height *= maxDim / width;
+          width = maxDim;
+        } else if (height > maxDim) {
+          width *= maxDim / height;
+          height = maxDim;
+        }
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const maxDim = 800;
-      let width = img.width;
-      let height = img.height;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
 
-      if (width > height && width > maxDim) {
-        height *= maxDim / width;
-        width = maxDim;
-      } else if (height > maxDim) {
-        width *= maxDim / height;
-        height = maxDim;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
-
-      currentImageData = canvas.toDataURL("image/jpeg", 0.7);
-      renderImagePreview();
+        currentEditImageData = canvas.toDataURL('image/jpeg', 0.7);
+        renderEditImagePreview();
+      };
+      img.src = event.target.result;
     };
-    img.src = event.target.result;
-  };
-  reader.readAsDataURL(file);
-});
+    reader.readAsDataURL(file);
+  });
+}
 
-function renderImagePreview() {
-  imagePreviewContainer.innerHTML = "";
-  if (currentImageData) {
-    const img = document.createElement("img");
-    img.src = currentImageData;
-    img.style.maxWidth = "100%";
-    img.style.maxHeight = "200px";
-    img.style.borderRadius = "8px";
-    imagePreviewContainer.appendChild(img);
-    removeImageBtn.style.display = "inline-block";
+// 画像プレビュー表示
+function renderEditImagePreview() {
+  const container = document.getElementById('editImagePreview');
+  const btnRemove = document.getElementById('btnRemoveImage');
+  if (!container) return;
+
+  container.innerHTML = '';
+  if (currentEditImageData) {
+    const img = document.createElement('img');
+    img.src = currentEditImageData;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '180px';
+    img.style.borderRadius = '8px';
+    container.appendChild(img);
+    if (btnRemove) btnRemove.style.display = 'inline-block';
   } else {
-    removeImageBtn.style.display = "none";
+    if (btnRemove) btnRemove.style.display = 'none';
   }
 }
 
-removeImageBtn.addEventListener("click", () => {
-  currentImageData = "";
-  modalImage.value = "";
-  renderImagePreview();
-});
+// 画像の削除
+function removeEditImage() {
+  currentEditImageData = '';
+  const imgInput = document.getElementById('editItemImage');
+  if (imgInput) imgInput.value = '';
+  renderEditImagePreview();
+}
 
-saveDetailBtn.addEventListener("click", () => {
-  const id = modalItemId.value;
-  if (!id) return;
+// 編集データの保存
+function saveItemEdit() {
+  const id = Number(document.getElementById('editItemId').value);
+  const targetIndex = items.findIndex(i => i.id === id);
 
-  expensesRef.child(id).update({
-    note: modalNote.value,
-    image: currentImageData
-  }).then(() => {
-    detailModal.style.display = "none";
-  }).catch((error) => {
-    console.error("更新エラー:", error);
-    alert("保存に失敗しました");
-  });
-});
+  if (targetIndex === -1) return;
+
+  items[targetIndex] = {
+    ...items[targetIndex],
+    date: document.getElementById('editItemDate').value,
+    store: document.getElementById('editItemStore').value,
+    name: document.getElementById('editItemName').value,
+    price: parseInt(document.getElementById('editItemPrice').value) || 0,
+    category: document.getElementById('editItemCategory').value,
+    note: document.getElementById('editItemNote').value,
+    image: currentEditImageData
+  };
+
+  saveData();
+  applyFilters();
+  closeModal('itemEditModal');
+}
+
