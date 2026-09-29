@@ -1,397 +1,173 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="mono">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>超多機能レシートデータ管理システム</title>
-
-  <!-- PWA設定 (アプリ化＆URLバー非表示) -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#000000">
-  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='100' fill='%23111111'/><path d='M280 64L100 288h160l-20 160 180-224H260l20-160z' fill='%2300ff88'/></svg>">
-
-  <!-- 外部ライブラリ (Chart.js & Firebase) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+  <title>共有家計簿 & 経費管理</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <style>
+    /* モーダル（ポップアップ）用追加スタイル */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--card-bg, #111);
+      color: var(--text, #ccc);
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      border: 1px solid var(--border, #fff);
+      box-sizing: border-box;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px;
+      resize: vertical;
+    }
+    .btn-detail {
+      background: #333;
+      color: #fff;
+      border: 1px solid #666;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-detail.has-content {
+      border-color: #fff;
+      font-weight: bold;
+    }
+    .btn-delete {
+      background: #c62828;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+  </style>
 </head>
-  
-  <!-- CRT（ブラウン管）走査線・エフェクトレイヤー -->
-  <div id="crt-overlay">
-    <div class="crt-vignette"></div>
-    <div class="crt-scanlines"></div>
-  </div>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>共有家計簿</h1>
+      <div id="sync-status" class="sync-badge">接続中...</div>
+    </header>
 
-  <!-- SVGスプライト定義 -->
-  <svg style="display: none;">
-    <defs>
-      <g id="icon-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></g>
-      <g id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></g>
-      <g id="icon-home" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></g>
-      <g id="icon-edit-3" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></g>
-      <g id="icon-pie-chart" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></g>
-      <g id="icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></g>
-      <g id="icon-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></g>
-      <g id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></g>
-      <g id="icon-clipboard" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></g>
-      <g id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></g>
-      <g id="icon-bar-chart" viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></g>
-      <g id="icon-shopping-bag" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></g>
-      <g id="icon-package" viewBox="0 0 24 24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></g>
-      <g id="icon-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></g>
-      <g id="icon-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>
-      <g id="icon-pencil" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></g>
-      <g id="icon-trash-2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></g>
-    </defs>
-  </svg>
-
-  <!-- ヘッダー -->
-  <header>
-    <h1>
-      <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-zap"/></svg>
-      レシートデータ管理
-    </h1>
-    <button class="icon-btn" onclick="openModal('settingsModal')">
-      <svg class="icon" viewBox="0 0 24 24"><use href="#icon-settings"/></svg>
-    </button>
-  </header>
-
-  <!-- ナビゲーションタブ -->
-  <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('tab-home')">
-      <svg class="icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg> ホーム
-    </button>
-    <button class="tab-btn" onclick="switchTab('tab-entry')">
-      <svg class="icon" viewBox="0 0 24 24"><use href="#icon-edit-3"/></svg> 登録・管理
-    </button>
-    <button class="tab-btn" onclick="switchTab('tab-analysis')">
-      <svg class="icon" viewBox="0 0 24 24"><use href="#icon-pie-chart"/></svg> 分析・一覧
-    </button>
-  </nav>
-
-  <main>
-    <!-- ==================== タブ1: ホーム (概要) ==================== -->
-    <div id="tab-home" class="tab-content active">
-      <div class="card clickable-card" onclick="openModal('budgetDetailModal')">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-target"/></svg>
-            今月の予算
-          </span>
-          <span style="font-size:0.75rem; color:var(--primary); font-weight:normal;">タップで詳細 ＞</span>
-        </h2>
-        <div class="budget-stats">
-          <span>消費: ¥<span id="thisMonthSpent">0</span> (<span id="monthCompare">前月比: ±0</span>)</span>
-          <span>残金: ¥<span id="budgetRemaining">0</span></span>
+    <!-- 入力フォーム -->
+    <section class="card input-card">
+      <h2>データ登録</h2>
+      <form id="expense-form">
+        <div class="form-group">
+          <label for="date">日付</label>
+          <input type="date" id="date" required>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressBarFill"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-tag"/></svg>
-            最安値（底値）チェック
-          </span>
-        </h2>
-        <div style="display: flex; gap: 6px;">
-          <input type="text" id="bottomPriceSearch" placeholder="商品名を入力（例: 牛乳、おむつ）">
-          <button class="btn" style="white-space: nowrap;" onclick="searchBottomPrice()">
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-search"/></svg> 検索
-          </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>
-            日別支出カレンダー
-          </span>
-          <span style="font-size:0.7rem; font-weight:normal; color:var(--text-muted);">日付タップで商品表示</span>
-        </h2>
-        <div class="calendar-header-ctrl">
-          <button class="btn-outline" onclick="changeCalendarMonth(-1)">◀ 前月</button>
-          <span id="calendarMonthTitle" class="calendar-month-title">2026年9月</span>
-          <button class="btn-outline" onclick="changeCalendarMonth(1)">次月 ▶</button>
-        </div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-      </div>
-    </div>
-
-    <!-- ==================== タブ2: 登録・管理 ==================== -->
-    <div id="tab-entry" class="tab-content">
-      <div class="card">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg>
-            Geminiデータの流し込み
-          </span>
-        </h2>
-        <textarea id="pasteArea" placeholder="Geminiで生成されたTSVテキストを貼り付け"></textarea>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn" style="flex:1;" onclick="registerData()">手動で一括登録</button>
-          <button class="btn btn-success" style="flex:1;" onclick="readFromClipboard()">
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg> クリップボード自動挿入
-          </button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-tag"/></svg>
-            カテゴリー管理
-          </span>
-        </h2>
-        <div style="display: flex; gap: 6px;">
-          <input type="text" id="newCategoryInput" placeholder="新しいカテゴリ名">
-          <button class="btn" style="white-space: nowrap;" onclick="addCategory()">追加</button>
-        </div>
-        <div class="category-manager" id="categoryListContainer"></div>
-      </div>
-    </div>
-
-    <!-- ==================== タブ3: 分析・一覧 ==================== -->
-    <div id="tab-analysis" class="tab-content">
-      <div class="dashboard-grid">
-        <div class="card" style="margin-bottom:0;">
-          <div class="chart-header">
-            <div class="chart-header-top">
-              <h2 style="margin:0;">
-                <span class="title-with-icon">
-                  <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-pie-chart"/></svg>
-                  カテゴリ別割合
-                </span>
-              </h2>
-            </div>
-            <div class="chart-controls">
-              <select id="catChartType" style="padding:2px 4px; font-size:0.75rem;" onchange="onCatTypeChange()">
-                <option value="month">月指定</option>
-                <option value="year">年指定</option>
-                <option value="all">全期間</option>
-              </select>
-              <input type="month" id="catChartMonthPicker" style="padding:2px; font-size:0.75rem; width:auto;" onchange="renderDashboard()">
-              <input type="number" id="catChartYearPicker" placeholder="2026" style="padding:2px 4px; font-size:0.75rem; width:70px; display:none;" onchange="renderDashboard()">
-            </div>
-          </div>
-          <div class="chart-container"><canvas id="categoryChart"></canvas></div>
-        </div>
-
-        <div class="card" style="margin-bottom:0;">
-          <div class="chart-header">
-            <div class="chart-header-top">
-              <h2 style="margin:0;">
-                <span class="title-with-icon">
-                  <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-bar-chart"/></svg>
-                  支出推移
-                </span>
-              </h2>
-            </div>
-            <div class="chart-controls">
-              <select id="trendChartScale" style="padding:2px 4px; font-size:0.75rem;" onchange="onTrendScaleChange()">
-                <option value="month">月単位</option>
-                <option value="year">年単位</option>
-              </select>
-              <select id="trendChartLimit" style="padding:2px 4px; font-size:0.75rem;" onchange="renderDashboard()"></select>
-            </div>
-          </div>
-          <div class="chart-scroll-wrapper">
-            <div class="chart-scroll-inner" id="trendChartScrollInner">
-              <canvas id="monthlyTrendChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-bottom:0;">
-          <h2>
-            <span class="title-with-icon">
-              <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-shopping-bag"/></svg>
-              店舗別集計（上位5件）
-            </span>
-            <span style="font-size:0.7rem; color:var(--text-muted); font-weight:normal;">※絞り込み対応</span>
-          </h2>
-          <div class="table-container" style="max-height: 140px;">
-            <table>
-              <thead><tr><th>店舗名</th><th style="text-align: right;">合計金額</th></tr></thead>
-              <tbody id="storeSummaryBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>
-          <span class="title-with-icon">
-            <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-package"/></svg>
-            登録商品一覧 (<span id="recordCount">0</span>件)
-          </span>
-          <button class="btn-outline" onclick="exportToCSV()">
-            <svg class="icon" viewBox="0 0 24 24"><use href="#icon-download"/></svg> CSV出力
-          </button>
-        </h2>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>カテゴリ</th>
-                <th style="text-align: right;">金額</th>
-                <th>商品名</th>
-                <th>日付</th>
-                <th>店舗名</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="dataTableBody"></tbody>
-          </table>
-        </div>
-        <div class="summary-bar">
-          <span>絞り込み合計: ¥<span id="totalAmount">0</span></span>
-          <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(全<span id="grandTotalCount">0</span>件)</span>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 設定 ＆ テーマ選択モーダル -->
-  <div class="modal-overlay" id="settingsModal">
-    <div class="modal">
-      <h3>
-        <span class="title-with-icon">
-          <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-settings"/></svg>
-          システム設定 ＆ 絞り込み
-        </span>
-        <button class="btn-outline" onclick="closeModal('settingsModal')">
-          <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
-        </button>
-      </h3>
-      <div style="display:flex; flex-direction:column; gap:12px; margin-top:6px;">
-        <div>
-          <label style="font-size:0.8rem; font-weight:bold; display:block; margin-bottom:4px;">カラーテーマ選択</label>
-          <select id="themeSelect" onchange="changeTheme(this.value)">
-            <option value="mono">🎮 白黒・レトロゲーム</option>
-            <option value="neon">⚡ サイバーネオン</option>
-            <option value="retro-tv">📺 レトロTV / CRT</option>
-            <option value="mono-crt">🖥️ モノクロCRT</option>
-            <option value="retro-ui">🕹️ レトロUI (モダン)</option>
+        <div class="form-group">
+          <label for="category">カテゴリー</label>
+          <select id="category" required>
+            <option value="食費">食費</option>
+            <option value="日用品">日用品</option>
+            <option value="交通費">交通費</option>
+            <option value="交際費">交際費</option>
+            <option value="固定費">固定費</option>
+            <option value="美容/衣服">美容/衣服</option>
+            <option value="雑費">雑費</option>
           </select>
         </div>
-        <hr style="border:none; border-top:1px solid var(--border);">
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <label style="font-size:0.8rem; font-weight:bold;">
-              <svg class="icon" viewBox="0 0 24 24"><use href="#icon-search"/></svg> 表示データの絞り込み
-            </label>
-            <button class="btn-outline" onclick="resetFilters()">リセット</button>
-          </div>
-          <div class="filter-grid">
-            <div class="filter-group"><label>開始日</label><input type="date" id="startDate" onchange="applyFilters()"></div>
-            <div class="filter-group"><label>終了日</label><input type="date" id="endDate" onchange="applyFilters()"></div>
-            <div class="filter-group"><label>カテゴリ</label><select id="categoryFilter" onchange="applyFilters()"></select></div>
-            <div class="filter-group"><label>キーワード</label><input type="text" id="keywordFilter" placeholder="品名・店舗" oninput="applyFilters()"></div>
-          </div>
+        <div class="form-group">
+          <label for="item">品名/内容</label>
+          <input type="text" id="item" placeholder="例: スーパー買い物" required>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="budgetDetailModal">
-    <div class="modal">
-      <h3>
-        <span class="title-with-icon">
-          <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-target"/></svg>
-          予算・カテゴリ別詳細
-        </span>
-        <button class="btn-outline" onclick="closeModal('budgetDetailModal')">
-          <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
-        </button>
-      </h3>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:0.8rem; font-weight:bold;">月全体予算設定:</label>
-        <div style="display:flex; gap:6px; margin-top:4px;">
-          <input type="number" id="monthlyBudgetInput" placeholder="100000" onchange="updateBudgetDisplay()">
-          <span style="line-height:35px; font-size:0.85rem;">円</span>
+        <div class="form-group">
+          <label for="amount">金額 (円)</label>
+          <input type="number" id="amount" placeholder="0" required>
         </div>
-      </div>
-      <h4 style="font-size:0.85rem; color:var(--text-muted); margin-bottom:6px;">▼ カテゴリ別予算</h4>
-      <div class="cat-budget-grid" id="categoryBudgetGrid"></div>
-    </div>
-  </div>
+        <div class="form-group">
+          <label for="payer">支払者</label>
+          <select id="payer" required>
+            <option value="共通">共通</option>
+            <option value="自分">自分</option>
+            <option value="相手">相手</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">登録する</button>
+      </form>
+    </section>
 
-  <div class="modal-overlay" id="dayDetailModal">
-    <div class="modal">
-      <h3>
-        <span class="title-with-icon">
-          <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>
-          <span id="modalDateTitle"></span> の購入商品
-        </span>
-        <button class="btn-outline" onclick="closeModal('dayDetailModal')">
-          <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
-        </button>
-      </h3>
-      <div style="margin-top:8px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-        <label style="font-size:0.75rem; white-space:nowrap; color:var(--text-muted);">カテゴリ絞り込み:</label>
-        <select id="dayCategoryFilter" style="padding:4px; font-size:0.75rem;" onchange="filterDayDetails()"></select>
-      </div>
-      <div class="table-container">
+    <!-- 履歴一覧 -->
+    <section class="card list-card">
+      <h2>購入履歴</h2>
+      <div class="table-responsive">
         <table>
           <thead>
-            <tr><th>カテゴリ</th><th>商品名</th><th style="text-align:right;">金額</th><th>店舗</th></tr>
+            <tr>
+              <th>日付</th>
+              <th>カテゴリー</th>
+              <th>品名</th>
+              <th>金額</th>
+              <th>支払</th>
+              <th>詳細</th>
+              <th>操作</th>
+            </tr>
           </thead>
-          <tbody id="dayDetailTableBody"></tbody>
+          <tbody id="expense-list">
+            <!-- JavaScriptで動的生成 -->
+          </tbody>
         </table>
       </div>
-    </div>
+    </section>
   </div>
 
-  <div class="modal-overlay" id="bottomPriceModal">
-    <div class="modal">
-      <h3>
-        <span class="title-with-icon">
-          <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-tag"/></svg>
-          最安値（底値）検索結果
-        </span>
-        <button class="btn-outline" onclick="closeModal('bottomPriceModal')">
-          <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
-        </button>
-      </h3>
-      <div id="bottomPriceResult" style="margin-top:10px; font-size:0.9rem; line-height:1.5;"></div>
-    </div>
-  </div>
+  <!-- メモ・画像編集用モーダル（ポップアップ） -->
+  <div id="detail-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close-btn" id="modal-close">&times;</span>
+      <h3>詳細・メモ・画像の編集</h3>
+      <input type="hidden" id="modal-item-id">
+      
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="modal-note">メモ</label>
+        <textarea id="modal-note" rows="3" placeholder="メモを入力（例: 〇〇店で購入、セール品など）"></textarea>
+      </div>
 
-  <div class="modal-overlay" id="editModal">
-    <div class="modal">
-      <h3>
-        <span class="title-with-icon">
-          <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-pencil"/></svg>
-          商品データの編集
-        </span>
-        <button class="btn-outline" onclick="closeModal('editModal')">
-          <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
-        </button>
-      </h3>
-      <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
-        <input type="hidden" id="editId">
-        <label style="font-size:0.75rem;">日付</label><input type="date" id="editDate">
-        <label style="font-size:0.75rem;">店舗名</label><input type="text" id="editStore">
-        <label style="font-size:0.75rem;">商品名</label><input type="text" id="editName">
-        <label style="font-size:0.75rem;">金額</label><input type="number" id="editPrice">
-        <label style="font-size:0.75rem;">カテゴリ</label><select id="editCategory"></select>
-        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
-          <button class="btn-outline" onclick="closeModal('editModal')">キャンセル</button>
-          <button class="btn" onclick="saveEdit()">更新保存</button>
+      <div class="form-group" style="margin-top: 15px;">
+        <label for="modal-image">添付画像</label>
+        <input type="file" id="modal-image" accept="image/*">
+        <div id="image-preview-container" style="margin-top: 10px;">
+          <!-- プレビュー画像を表示 -->
         </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+        <button id="save-detail-btn" class="btn btn-primary" style="flex:1;">保存する</button>
+        <button id="remove-image-btn" class="btn btn-danger" style="display: none;">画像を削除</button>
       </div>
     </div>
   </div>
 
+  <!-- Firebase SDK (v9/v10 Compat Library) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
