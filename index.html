@@ -1,114 +1,29 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="mono">
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>共有家計簿 & 経費管理</title>
-  <link rel="stylesheet" href="style.css">
+  <title>超多機能レシートデータ管理システム</title>
+
+  <!-- PWA設定 -->
   <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='512' height='512'><rect width='512' height='512' rx='100' fill='%23111111'/><path d='M280 64L100 288h160l-20 160 180-224H260l20-160z' fill='%2300ff88'/></svg>">
+
+  <!-- 外部ライブラリ (Chart.js & Firebase Compat SDK) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
-    <header>
-      <h1>共有家計簿</h1>
-      <div id="sync-status" class="sync-badge">接続中...</div>
-    </header>
+  <!-- ※ ここに既存の HTML ボディ（ボタンやテーブル等のUIコード）が入ります -->
 
-    <!-- 入力フォーム -->
-    <section class="card input-card">
-      <h2>データ登録</h2>
-      <form id="expense-form">
-        <div class="form-group">
-          <label for="date">日付</label>
-          <input type="date" id="date" required>
-        </div>
-        <div class="form-group">
-          <label for="category">カテゴリー</label>
-          <select id="category" required>
-            <option value="食費">食費</option>
-            <option value="日用品">日用品</option>
-            <option value="交通費">交通費</option>
-            <option value="交際費">交際費</option>
-            <option value="固定費">固定費</option>
-            <option value="美容/衣服">美容/衣服</option>
-            <option value="雑費">雑費</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="item">品名/内容</label>
-          <input type="text" id="item" placeholder="例: スーパー買い物" required>
-        </div>
-        <div class="form-group">
-          <label for="amount">金額 (円)</label>
-          <input type="number" id="amount" placeholder="0" required>
-        </div>
-        <div class="form-group">
-          <label for="payer">支払者</label>
-          <select id="payer" required>
-            <option value="共通">共通</option>
-            <option value="自分">自分</option>
-            <option value="相手">相手</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">登録する</button>
-      </form>
-    </section>
-
-    <!-- 履歴一覧 -->
-    <section class="card list-card">
-      <h2>購入履歴</h2>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>日付</th>
-              <th>カテゴリー</th>
-              <th>品名</th>
-              <th>金額</th>
-              <th>支払</th>
-              <th>詳細/メモ</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="expense-list">
-            <!-- JavaScriptで動的生成 -->
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <!-- メモ・画像編集用モーダル（ポップアップ） -->
-  <div id="detail-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <span class="close-btn" id="modal-close">&times;</span>
-      <h3>詳細・メモ・画像の編集</h3>
-      <input type="hidden" id="modal-item-id">
-      
-      <div class="form-group">
-        <label for="modal-note">📝 メモ</label>
-        <textarea id="modal-note" rows="3" placeholder="メモを入力（例: 〇〇店で購入、セール品など）"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="modal-image">📷 画像添付</label>
-        <input type="file" id="modal-image" accept="image/*">
-        <div id="image-preview-container" style="margin-top: 10px;">
-          <!-- プレビュー画像を表示 -->
-        </div>
-      </div>
-
-      <div class="modal-actions" style="margin-top: 15px; display: flex; gap: 10px;">
-        <button id="save-detail-btn" class="btn btn-primary">保存する</button>
-        <button id="remove-image-btn" class="btn btn-danger" style="display: none;">画像を削除</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase SDK (v9/v10 Compat Library) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <!-- スクリプトは必ずボディの最下部で読み込む -->
   <script src="script.js"></script>
 </body>
 </html>
