@@ -751,3 +751,103 @@ function getThemeChartColors() {
   }
 }
         
+// --- モーダル（メモ・画像編集）関連処理 ---
+const detailModal = document.getElementById("detail-modal");
+const modalClose = document.getElementById("modal-close");
+const modalItemId = document.getElementById("modal-item-id");
+const modalNote = document.getElementById("modal-note");
+const modalImage = document.getElementById("modal-image");
+const imagePreviewContainer = document.getElementById("image-preview-container");
+const saveDetailBtn = document.getElementById("save-detail-btn");
+const removeImageBtn = document.getElementById("remove-image-btn");
+
+let currentImageData = "";
+
+window.openModal = function(id) {
+  modalItemId.value = id;
+  currentImageData = "";
+
+  expensesRef.child(id).once("value").then((snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    modalNote.value = data.note || "";
+    currentImageData = data.image || "";
+    renderImagePreview();
+
+    detailModal.style.display = "flex";
+  });
+};
+
+modalClose.onclick = () => { detailModal.style.display = "none"; };
+window.onclick = (e) => { if (e.target === detailModal) detailModal.style.display = "none"; };
+
+modalImage.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const maxDim = 800;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height && width > maxDim) {
+        height *= maxDim / width;
+        width = maxDim;
+      } else if (height > maxDim) {
+        width *= maxDim / height;
+        height = maxDim;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      currentImageData = canvas.toDataURL("image/jpeg", 0.7);
+      renderImagePreview();
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function renderImagePreview() {
+  imagePreviewContainer.innerHTML = "";
+  if (currentImageData) {
+    const img = document.createElement("img");
+    img.src = currentImageData;
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "200px";
+    img.style.borderRadius = "8px";
+    imagePreviewContainer.appendChild(img);
+    removeImageBtn.style.display = "inline-block";
+  } else {
+    removeImageBtn.style.display = "none";
+  }
+}
+
+removeImageBtn.addEventListener("click", () => {
+  currentImageData = "";
+  modalImage.value = "";
+  renderImagePreview();
+});
+
+saveDetailBtn.addEventListener("click", () => {
+  const id = modalItemId.value;
+  if (!id) return;
+
+  expensesRef.child(id).update({
+    note: modalNote.value,
+    image: currentImageData
+  }).then(() => {
+    detailModal.style.display = "none";
+  }).catch((error) => {
+    console.error("更新エラー:", error);
+    alert("保存に失敗しました");
+  });
+});
