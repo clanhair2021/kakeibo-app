@@ -86,19 +86,7 @@ expensesRef.on("value", (snapshot) => {
 
     const hasNote = item.note && item.note.trim() !== "";
     const hasImage = item.image && item.image !== "";
-    
-    let labelText = "詳細";
-    let hasContentClass = "";
-    if (hasNote && hasImage) {
-      labelText = "メモ/画像";
-      hasContentClass = "has-content";
-    } else if (hasNote) {
-      labelText = "メモあり";
-      hasContentClass = "has-content";
-    } else if (hasImage) {
-      labelText = "画像あり";
-      hasContentClass = "has-content";
-    }
+    const badgeText = `${hasNote ? "📝" : ""}${hasImage ? "📷" : ""}` || "詳細";
 
     tr.innerHTML = `
       <td>${item.date}</td>
@@ -107,7 +95,7 @@ expensesRef.on("value", (snapshot) => {
       <td>¥${Number(item.amount).toLocaleString()}</td>
       <td>${item.payer}</td>
       <td>
-        <button class="btn-detail ${hasContentClass}" onclick="openModal('${id}')">${labelText}</button>
+        <button class="btn-detail" onclick="openModal('${id}')">${badgeText}</button>
       </td>
       <td>
         <button class="btn-delete" onclick="deleteExpense('${id}')">削除</button>
@@ -150,7 +138,7 @@ window.openModal = function(id) {
 modalClose.onclick = () => { detailModal.style.display = "none"; };
 window.onclick = (e) => { if (e.target === detailModal) detailModal.style.display = "none"; };
 
-// 画像選択時の自動圧縮処理
+// 画像選択時の圧縮処理
 modalImage.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -159,7 +147,7 @@ modalImage.addEventListener("change", (e) => {
   reader.onload = (event) => {
     const img = new Image();
     img.onload = () => {
-      // 画像を長辺最大800pxに圧縮（通信量抑制のため）
+      // 画像を長辺最大800pxに圧縮
       const canvas = document.createElement("canvas");
       const maxDim = 800;
       let width = img.width;
