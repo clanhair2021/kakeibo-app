@@ -249,11 +249,41 @@ function changeCalendarMonth(diff) {
   renderCalendar();
 }
 
+// ==========================================
+// カレンダー関連処理（月選択・切り替え連動版）
+// ==========================================
+
+// カレンダーの月を前後させるボタン処理
+function changeCalendarMonth(diff) {
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
+  
+  // ホームの月ピッカーも一緒に連動させる
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  if (dashMonthPicker) {
+    const y = currentCalendarDate.getFullYear();
+    const m = String(currentCalendarDate.getMonth() + 1).padStart(2, '0');
+    dashMonthPicker.value = `${y}-${m}`;
+    updateBudgetDisplay(); // 予算側も連動して切り替え
+  }
+
+  renderCalendar();
+}
+
 function renderCalendar() {
   const grid = document.getElementById('calendarGrid');
   if (!grid) return;
   grid.innerHTML = '';
   
+  // ホームの月ピッカーが操作されていれば、その年月をカレンダーに反映する
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  if (dashMonthPicker && dashMonthPicker.value) {
+    const [pYear, pMonth] = dashMonthPicker.value.split('-').map(Number);
+    if (pYear && pMonth) {
+      currentCalendarDate.setFullYear(pYear);
+      currentCalendarDate.setMonth(pMonth - 1);
+    }
+  }
+
   const year = currentCalendarDate.getFullYear();
   const month = currentCalendarDate.getMonth();
 
@@ -282,6 +312,7 @@ function renderCalendar() {
     `;
   }
 }
+
 
 function showDayDetails(dateStr) {
   activeDayDateStr = dateStr;
