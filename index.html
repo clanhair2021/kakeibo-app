@@ -77,6 +77,11 @@
   <main>
     <!-- ==================== タブ1: ホーム (概要) ==================== -->
     <div id="tab-home" class="tab-content active">
+      <!-- ▼ 【追加】ホーム画面の月選択ピッカー -->
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; background: var(--bg-card, #222); padding: 8px 12px; border-radius: 8px;">
+        <label for="dashboardMonthPicker" style="font-weight: bold; font-size: 0.85rem;">表示対象月:</label>
+        <input type="month" id="dashboardMonthPicker" onchange="updateBudgetDisplay()" style="padding: 4px; border-radius: 4px; border: 1px solid var(--border); font-size: 0.85rem;">
+      </div>
       <div class="card clickable-card" onclick="openModal('budgetDetailModal')">
         <h2>
           <span class="title-with-icon">
