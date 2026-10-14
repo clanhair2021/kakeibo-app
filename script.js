@@ -109,6 +109,7 @@ window.onload = () => {
   onTrendScaleChange();
   renderCategoryManager();
   applyFilters();
+  updateBudgetDisplay();
 };
 
 // ==========================================
