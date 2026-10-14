@@ -87,17 +87,6 @@ window.onload = () => {
     });
   }
 
-  if (budgetRef) {
-    budgetRef.on('value', (snapshot) => {
-      const val = snapshot.val();
-      if (val !== null && val !== undefined) {
-        monthlyBudget = val;
-        if (budgetInput) budgetInput.value = monthlyBudget;
-        updateBudgetDisplay();
-      }
-    });
-  }
-
   if (itemsRef) {
     itemsRef.on('value', (snapshot) => {
       const data = snapshot.val();
@@ -144,13 +133,9 @@ function saveCatBudget(cat, val) {
 }
 
 // ==========================================
-// 予算・集計表示の更新（選択月連動版）
+// 予算・集計表示の更新（月別予算・選択月連動版）
 // ==========================================
 function updateBudgetDisplay() {
-  const budgetInput = document.getElementById('monthlyBudgetInput');
-  monthlyBudget = budgetInput ? (parseInt(budgetInput.value) || 0) : monthlyBudget;
-  if (budgetRef) budgetRef.set(monthlyBudget);
-
   // 選択された年月を取得（未選択なら現在月）
   const dashMonthPicker = document.getElementById('dashboardMonthPicker');
   let selectedMonthStr = dashMonthPicker ? dashMonthPicker.value : '';
@@ -161,6 +146,42 @@ function updateBudgetDisplay() {
     if (dashMonthPicker) dashMonthPicker.value = selectedMonthStr;
   }
 
+  // 月ごとの予算をFirebaseまたはローカルストレージから取得して反映
+  if (db) {
+    db.ref(`kakeibo_budgets/${selectedMonthStr}`).once('value').then((snapshot) => {
+      const val = snapshot.val();
+      monthlyBudget = (val !== null && val !== undefined) ? val : 0;
+      const budgetInput = document.getElementById('monthlyBudgetInput');
+      if (budgetInput && document.activeElement !== budgetInput) {
+        budgetInput.value = monthlyBudget;
+      }
+      calculateAndRenderBudget(selectedMonthStr);
+    });
+  } else {
+    const savedBudgets = JSON.parse(localStorage.getItem('receipt_monthly_budgets') || '{}');
+    monthlyBudget = savedBudgets[selectedMonthStr] || 0;
+    const budgetInput = document.getElementById('monthlyBudgetInput');
+    if (budgetInput && document.activeElement !== budgetInput) {
+      budgetInput.value = monthlyBudget;
+    }
+    calculateAndRenderBudget(selectedMonthStr);
+  }
+}
+
+// 予算計算と画面描画を行う内部関数
+function calculateAndRenderBudget(selectedMonthStr) {
+  const budgetInput = document.getElementById('monthlyBudgetInput');
+  monthlyBudget = budgetInput ? (parseInt(budgetInput.value) || 0) : monthlyBudget;
+
+  // 選択月の予算を保存
+  if (db) {
+    db.ref(`kakeibo_budgets/${selectedMonthStr}`).set(monthlyBudget);
+  } else {
+    const savedBudgets = JSON.parse(localStorage.getItem('receipt_monthly_budgets') || '{}');
+    savedBudgets[selectedMonthStr] = monthlyBudget;
+    localStorage.setItem('receipt_monthly_budgets', JSON.stringify(savedBudgets));
+  }
+
   // 選択月と前月の文字列計算 (YYYY-MM)
   const [sYear, sMonth] = selectedMonthStr.split('-').map(Number);
   const targetDate = new Date(sYear, sMonth - 1, 1);
@@ -169,7 +190,6 @@ function updateBudgetDisplay() {
   const thisMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
   const lastMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
 
-  // 選択月と前月の支出集計
   const thisMonthSpent = items.filter(i => i.date && i.date.startsWith(thisMonthStr)).reduce((s, i) => s + i.price, 0);
   const lastMonthSpent = items.filter(i => i.date && i.date.startsWith(lastMonthStr)).reduce((s, i) => s + i.price, 0);
 
@@ -189,7 +209,6 @@ function updateBudgetDisplay() {
   if (elRemaining) elRemaining.innerText = remaining.toLocaleString();
   if (elFill) elFill.style.width = `${percent}%`;
 
-  // カテゴリー別予算の表示も再更新
   if (typeof renderCategoryBudgets === 'function') {
     renderCategoryBudgets();
   }
