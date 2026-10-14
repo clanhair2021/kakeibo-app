@@ -143,16 +143,33 @@ function saveCatBudget(cat, val) {
   renderCategoryBudgets();
 }
 
+// ==========================================
+// 予算・集計表示の更新（選択月連動版）
+// ==========================================
 function updateBudgetDisplay() {
   const budgetInput = document.getElementById('monthlyBudgetInput');
   monthlyBudget = budgetInput ? (parseInt(budgetInput.value) || 0) : monthlyBudget;
   if (budgetRef) budgetRef.set(monthlyBudget);
 
-  const now = new Date();
-  const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+  // 選択された年月を取得（未選択なら現在月）
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  let selectedMonthStr = dashMonthPicker ? dashMonthPicker.value : '';
+  
+  if (!selectedMonthStr) {
+    const now = new Date();
+    selectedMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    if (dashMonthPicker) dashMonthPicker.value = selectedMonthStr;
+  }
 
+  // 選択月と前月の文字列計算 (YYYY-MM)
+  const [sYear, sMonth] = selectedMonthStr.split('-').map(Number);
+  const targetDate = new Date(sYear, sMonth - 1, 1);
+  const prevDate = new Date(sYear, sMonth - 2, 1);
+  
+  const thisMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+  // 選択月と前月の支出集計
   const thisMonthSpent = items.filter(i => i.date && i.date.startsWith(thisMonthStr)).reduce((s, i) => s + i.price, 0);
   const lastMonthSpent = items.filter(i => i.date && i.date.startsWith(lastMonthStr)).reduce((s, i) => s + i.price, 0);
 
@@ -171,7 +188,13 @@ function updateBudgetDisplay() {
   if (elCompare) elCompare.innerText = diffStr;
   if (elRemaining) elRemaining.innerText = remaining.toLocaleString();
   if (elFill) elFill.style.width = `${percent}%`;
+
+  // カテゴリー別予算の表示も再更新
+  if (typeof renderCategoryBudgets === 'function') {
+    renderCategoryBudgets();
+  }
 }
+
 
 // ==========================================
 // 5. UI・操作関連関数
