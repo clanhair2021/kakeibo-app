@@ -719,27 +719,6 @@ function renderDashboard(filteredData) {
   }
 }
 
-function openEditModal(id) {
-  const item = items.find(i => i.id === id);
-  if (!item) return;
-
-  const idEl = document.getElementById('editId');
-  const dateEl = document.getElementById('editDate');
-  const storeEl = document.getElementById('editStore');
-  const nameEl = document.getElementById('editName');
-  const priceEl = document.getElementById('editPrice');
-  const catEl = document.getElementById('editCategory');
-
-  if (idEl) idEl.value = item.id;
-  if (dateEl) dateEl.value = item.date;
-  if (storeEl) storeEl.value = item.store;
-  if (nameEl) nameEl.value = item.name;
-  if (priceEl) priceEl.value = item.price;
-  if (catEl) catEl.value = item.category;
-
-  openModal('editModal');
-}
-
 function saveEdit() {
   const idEl = document.getElementById('editId');
   if (!idEl) return;
