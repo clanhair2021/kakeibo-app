@@ -120,7 +120,12 @@
             <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>
             日別支出カレンダー
           </span>
-          <span style="font-size:0.7rem; font-weight:normal; color:var(--text-muted);">日付タップで商品表示</span>
+          <!-- ▼ カレンダー操作用の ＜ ＞ ボタンを追加 -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-outline" onclick="changeCalendarMonth(-1)" style="padding: 2px 8px; font-size: 0.8rem;">＜</button>
+            <span id="calendarMonthTitle" style="font-size: 0.9rem; font-weight: bold;"></span>
+            <button class="btn-outline" onclick="changeCalendarMonth(1)" style="padding: 2px 8px; font-size: 0.8rem;">＞</button>
+          </div>
         </h2>
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
