@@ -108,6 +108,10 @@ window.onload = () => {
 
   const now = new Date();
   const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  // ホーム表示月の初期値をセット
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  if (dashMonthPicker && !dashMonthPicker.value) dashMonthPicker.value = thisMonthStr;
+
   const monthPicker = document.getElementById('catChartMonthPicker');
   const yearPicker = document.getElementById('catChartYearPicker');
   if (monthPicker) monthPicker.value = thisMonthStr;
