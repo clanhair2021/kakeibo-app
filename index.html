@@ -367,7 +367,7 @@
   </div>
 
   <div class="modal-overlay" id="editModal">
-    <div class="modal">
+    <div class="modal" style="max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto;">
       <h3>
         <span class="title-with-icon">
           <svg class="icon icon-primary" viewBox="0 0 24 24"><use href="#icon-pencil"/></svg>
@@ -377,16 +377,40 @@
           <svg class="icon" viewBox="0 0 24 24"><use href="#icon-x"/></svg>
         </button>
       </h3>
+      
       <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
         <input type="hidden" id="editId">
-        <label style="font-size:0.75rem;">日付</label><input type="date" id="editDate">
-        <label style="font-size:0.75rem;">店舗名</label><input type="text" id="editStore">
-        <label style="font-size:0.75rem;">商品名</label><input type="text" id="editName">
-        <label style="font-size:0.75rem;">金額</label><input type="number" id="editPrice">
-        <label style="font-size:0.75rem;">カテゴリ</label><select id="editCategory"></select>
-        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
-          <button class="btn-outline" onclick="closeModal('editModal')">キャンセル</button>
-          <button class="btn" onclick="saveEdit()">更新保存</button>
+        
+        <label style="font-size:0.75rem;">日付</label>
+        <input type="date" id="editDate">
+        
+        <label style="font-size:0.75rem;">店舗名</label>
+        <input type="text" id="editStore">
+        
+        <label style="font-size:0.75rem;">商品名</label>
+        <input type="text" id="editName">
+        
+        <label style="font-size:0.75rem;">金額</label>
+        <input type="number" id="editPrice">
+        
+        <label style="font-size:0.75rem;">カテゴリ</label>
+        <select id="editCategory"></select>
+
+        <!-- ▼ 追加：メモ・画像項目 -->
+        <label style="font-size:0.75rem; margin-top: 4px;">メモ</label>
+        <textarea id="editItemNote" rows="2" style="width: 100%; box-sizing: border-box; padding: 6px; border-radius: 4px; background: var(--bg-input, #111); color: var(--text, #fff); border: 1px solid var(--border);"></textarea>
+
+        <label style="font-size:0.75rem; margin-top: 4px;">添付画像</label>
+        <input type="file" id="editItemImage" accept="image/*" style="width: 100%;">
+        <div id="editImagePreview" style="margin-top: 4px;"></div>
+        <!-- ▲ ここまで -->
+
+        <div style="display: flex; gap: 8px; justify-content: space-between; margin-top: 15px;">
+          <button id="btnRemoveImage" onclick="removeEditImage()" style="display: none; background: #c62828; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">画像を削除</button>
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <button class="btn-outline" onclick="closeModal('editModal')">キャンセル</button>
+            <button class="btn" onclick="saveEdit()">更新保存</button>
+          </div>
         </div>
       </div>
     </div>
