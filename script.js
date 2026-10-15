@@ -476,13 +476,20 @@ function renderCategoryBudgets() {
   const grid = document.getElementById('categoryBudgetGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  const now = new Date();
-  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // ▼ ホーム画面の選択月を取得して連動させる
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  let selectedMonthStr = dashMonthPicker ? dashMonthPicker.value : '';
+  if (!selectedMonthStr) {
+    const now = new Date();
+    selectedMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
 
   categories.forEach(cat => {
     const bAmount = categoryBudgets[cat] || 0;
+    // 選択月（YYYY-MM）に一致するデータのみを集計
     const spent = items
-      .filter(i => i.category === cat && i.date && i.date.startsWith(currentMonthStr))
+      .filter(i => i.category === cat && i.date && i.date.startsWith(selectedMonthStr))
       .reduce((sum, i) => sum + i.price, 0);
 
     grid.innerHTML += `
@@ -496,6 +503,7 @@ function renderCategoryBudgets() {
     `;
   });
 }
+
 
 function parsePrice(priceStr) {
   if (!priceStr) return 0;
