@@ -137,7 +137,6 @@ function saveCatBudget(cat, val) {
 // 予算・集計表示の更新（月別予算・選択月連動版）
 // ==========================================
 function updateBudgetDisplay() {
-  // 選択された年月を取得（未選択なら現在月）
   const dashMonthPicker = document.getElementById('dashboardMonthPicker');
   let selectedMonthStr = dashMonthPicker ? dashMonthPicker.value : '';
   
@@ -153,6 +152,7 @@ function updateBudgetDisplay() {
       const val = snapshot.val();
       monthlyBudget = (val !== null && val !== undefined) ? val : 0;
       const budgetInput = document.getElementById('monthlyBudgetInput');
+      // ユーザーが入力フォーカスしていない時だけ値をセットする（入力中の勝手な書き換えを防ぐ）
       if (budgetInput && document.activeElement !== budgetInput) {
         budgetInput.value = monthlyBudget;
       }
@@ -168,6 +168,66 @@ function updateBudgetDisplay() {
     calculateAndRenderBudget(selectedMonthStr);
   }
 }
+
+// 予算の入力値が変わったときに保存して再計算する関数（新規追加）
+function onMonthlyBudgetChange() {
+  const budgetInput = document.getElementById('monthlyBudgetInput');
+  if (!budgetInput) return;
+  
+  monthlyBudget = parseInt(budgetInput.value) || 0;
+
+  const dashMonthPicker = document.getElementById('dashboardMonthPicker');
+  let selectedMonthStr = dashMonthPicker ? dashMonthPicker.value : '';
+  if (!selectedMonthStr) {
+    const now = new Date();
+    selectedMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  // Firebaseまたはローカルストレージに保存
+  if (db) {
+    db.ref(`kakeibo_budgets/${selectedMonthStr}`).set(monthlyBudget);
+  } else {
+    const savedBudgets = JSON.parse(localStorage.getItem('receipt_monthly_budgets') || '{}');
+    savedBudgets[selectedMonthStr] = monthlyBudget;
+    localStorage.setItem('receipt_monthly_budgets', JSON.stringify(savedBudgets));
+  }
+
+  calculateAndRenderBudget(selectedMonthStr);
+}
+
+// 予算計算と画面描画を行う内部関数
+function calculateAndRenderBudget(selectedMonthStr) {
+  const [sYear, sMonth] = selectedMonthStr.split('-').map(Number);
+  const targetDate = new Date(sYear, sMonth - 1, 1);
+  const prevDate = new Date(sYear, sMonth - 2, 1);
+  
+  const thisMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+  const lastMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const thisMonthSpent = items.filter(i => i.date && i.date.startsWith(thisMonthStr)).reduce((s, i) => s + i.price, 0);
+  const lastMonthSpent = items.filter(i => i.date && i.date.startsWith(lastMonthStr)).reduce((s, i) => s + i.price, 0);
+
+  const diff = thisMonthSpent - lastMonthSpent;
+  const diffStr = diff >= 0 ? `前月比: +¥${diff.toLocaleString()}` : `前月比: -¥${Math.abs(diff).toLocaleString()}`;
+
+  const remaining = monthlyBudget - thisMonthSpent;
+  const percent = monthlyBudget > 0 ? Math.min(Math.round((thisMonthSpent / monthlyBudget) * 100), 100) : 0;
+
+  const elSpent = document.getElementById('thisMonthSpent');
+  const elCompare = document.getElementById('monthCompare');
+  const elRemaining = document.getElementById('budgetRemaining');
+  const elFill = document.getElementById('progressBarFill');
+
+  if (elSpent) elSpent.innerText = thisMonthSpent.toLocaleString();
+  if (elCompare) elCompare.innerText = diffStr;
+  if (elRemaining) elRemaining.innerText = remaining.toLocaleString();
+  if (elFill) elFill.style.width = `${percent}%`;
+
+  if (typeof renderCategoryBudgets === 'function') {
+    renderCategoryBudgets();
+  }
+}
+
 
 // 予算計算と画面描画を行う内部関数
 function calculateAndRenderBudget(selectedMonthStr) {
