@@ -445,20 +445,31 @@ function renderCategoryManager() {
   const select = document.getElementById('categoryFilter');
   const editSelect = document.getElementById('editCategory');
   
-  if (!container || !select || !editSelect) return;
+  if (container) {
+    container.innerHTML = '';
+    categories.forEach(cat => {
+      container.innerHTML += `<div class="cat-tag">${cat} <button onclick="removeCategory('${cat}')">×</button></div>`;
+    });
+  }
 
-  container.innerHTML = '';
-  select.innerHTML = '<option value="">すべて</option>';
-  editSelect.innerHTML = '';
+  if (select) {
+    select.innerHTML = '<option value="">すべて</option>';
+    categories.forEach(cat => {
+      select.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+  }
 
-  categories.forEach(cat => {
-    container.innerHTML += `<div class="cat-tag">${cat} <button onclick="removeCategory('${cat}')">×</button></div>`;
-    select.innerHTML += `<option value="${cat}">${cat}</option>`;
-    editSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-  });
+  if (editSelect) {
+    editSelect.innerHTML = '';
+    categories.forEach(cat => {
+      editSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+  }
 
   localStorage.setItem('receipt_categories', JSON.stringify(categories));
-  renderCategoryBudgets();
+  if (typeof renderCategoryBudgets === 'function') {
+    renderCategoryBudgets();
+  }
 }
 
 function addCategory() {
