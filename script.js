@@ -289,7 +289,16 @@ function switchTab(tabId) {
   }
 }
 
-function openModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'flex'; }
+function openModal(id) { 
+  const el = document.getElementById(id); 
+  if (el) {
+    el.style.display = 'flex';
+    // モーダルが開いたタイミングで、カテゴリーのセレクトボックスを強制的に再構築する
+    if (typeof renderCategoryManager === 'function') {
+      renderCategoryManager();
+    }
+  } 
+}
 function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 
 function changeTheme(theme) {
